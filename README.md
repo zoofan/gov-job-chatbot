@@ -1,103 +1,62 @@
-# Holly Engineering Take-Home Assignment
+# Gov Job/Salary Chatbot
 
 ## Overview
 
-This take-home assignment is designed to evaluate your technical skills across several areas important to our engineering team. It's completely fine if you don't finish everything - we're more interested in understanding your approach and thought process.
-
-## Important: AI Usage & Assessment Philosophy
-
-**We're AI-friendly at Holly** - we use AI tools in our day-to-day work. However, this take-home assessment is specifically designed to evaluate **your individual problem-solving abilities and coding skills**.
-
-When AI tools are heavily used, it becomes difficult for us to assess:
-
-- How you think through problems and debug issues
-- Your ability to refactor and maintain code
-- Your understanding of the codebase and architectural decisions
-- Your attention to detail and code quality
-
-**Please use AI tools minimally, if at all.** We want to see your work, not AI-generated code. If you do use AI assistance, please clearly document what was AI-generated versus your own work in your submission writeup.
-
-_(Yes, we're aware of the irony that this README was refined with AI assistance!)_
-
-## Goals
-
-This assignment evaluates your skills in:
-
-1. **Data processing** - Efficiently filtering and matching data before sending to LLM
-2. **Next.js development** - Understanding Next.js patterns and best practices
-3. **LLM integration** - Properly structuring prompts and managing context
-4. **TypeScript** - Type safety and proper typing throughout
-5. **Code quality** - Clean, maintainable code with attention to detail
+A Next.js app that let's user ask natural-language questions above government jobs and salaries
 
 ## Getting Started
 
-1. Clone this repository to your local machine
-2. Install dependencies
-3. Understand the requirements
-4. Start building!
+1. Install dependencies:
 
-## The Challenge
+```bash
+npm install
+```
 
-You'll build a simple chat interface that allows users to query job and salary information stored in JSON files. Think of it as a basic HR assistant that can answer questions about job descriptions and compensation. The interface doesn't have to be anything fancy.
+2. Create a `.env.local` file with your Anthropic API key:
 
-### Note on Scale
-The included JSON datasets are intentionally small to keep this take-home manageable and avoid overwhelm. However, **please design your approach as if the datasets could grow significantly** (e.g., 10×–100× more records).
-We’re looking for evidence that your solution would remain efficient and maintainable as data grows—**without requiring you to build a full production system**. If you choose a simpler approach given time constraints, explain how you would scale it in your writeup.
+```bash
+ANTHROPIC_API_KEY=your-api-key-here
+```
 
-## Requirements
+3. Start the development server:
 
-### 1. Chat Interface
+```bash
+npm run dev
+```
 
-- Create a dedicated chat page (`/chat`) with a message interface
-- Style the interface so human messages appear on the right and AI messages on the left (standard chat UI convention)
-- The UI doesn't need to be elaborate - focus on functionality over aesthetics
+4. Open [http://localhost:3000/chat](http://localhost:3000/chat) in your browser to use the app.
 
-![Sample Application](public/sample.png)
+## Implementation Notes
 
-### 2. LLM Integration
+The implementation is essentially a RAG (Retrieval-Augmented Generation) pattern.
 
-- Integrate with an LLM of your choice
-- The LLM should be able to answer questions about the data in the job descriptions and salaries datasets
-- **Critical Requirement**: Your implementation should parse the user's query to identify which specific job they're asking about, and only pass the relevant job information to the LLM - **do not pass the entire dataset** to the LLM with each request.
-- **Scalability expectation**: Even though the provided dataset is small, structure your matching + filtering so it would still work well as the dataset grows.
-- Example queries and responses:
-  - "What are the knowledge, skills, and abilities for the Assistant Sheriff San Diego County position?"
-    - "The Assistant Sheriff in San Diego County should have knowledge of: local law enforcement agencies in San Diego County, local/state/federal laws, law enforcement rules and regulations, community-based policing..."
-  - "What is the salary for the Assistant Chief Probation Officer in San Bernardino?"
-    - "The Assistant Chief Probation Officer in San Bernardino has a salary range from $70.38 to $101.00 per hour (salary grades 1 and 2)."
+Upon module load, it creates an inverted index of job data. Essentially, it maps each word to the set of job indices where that word appears.
 
-## Technical Requirements
+For every job in the dataset, it extracts words from:
 
-- Use Next.js for the application framework
-- Implement proper TypeScript typing throughout the application
-- Implement server actions where appropriate
-- **Do not use fuzzy string matching libraries** (e.g., Levenshtein distance, fuzzywuzzy, string-similarity) for matching user queries to job records. We want to see your approach to handling query variations.
+1. Job title
+2. Juridiction (uses a token list mapping) ((e.g. sdcounty → ["san", "diego", "sd"]))
+3. Job code
 
-## Evaluation Criteria
+Each token gets an entry in the index. The key is the token and the value is a set of job indexes
 
-We'll be evaluating:
+Upon search, each word in the query is tokenized (with the stop words stripped) and those tokens are used to make a look-up in the inverted index. The jobs are scored by somming up weights. Words that are rare count more.
 
-1. **Data Processing Efficiency & Scalability** - How efficiently you process and filter data before sending to the LLM, and whether your approach is designed to scale as data grows (this is a key evaluation point)
-2. **Matching Strategy** - Your approach to matching user queries to job records without fuzzy matching - we're interested in seeing creative and effective solutions
-3. **Code Quality** - Clean, maintainable code without debug artifacts
-4. **Attention to Detail** - Accurate understanding of the data and consistent documentation
-5. **Problem-Solving Approach** - How you think through challenges and make architectural decisions
+There is also a salarayMap for quick salray lookups.
 
-## Submission
+ONLY THEN do we make a call the LLM (Claude in this case). We pass in the context with instructions to answer only with the provided data.
 
-**Please submit within 3 days** of receiving this assignment. We encourage you to spend only a few hours working on it - we want to gauge your thought process and problem-solving approach, not see a polished production-ready application.
+OTHER NOTES:
 
-Please submit:
+- I've attempted to abstract away specific LLM code to be able to switch providers if needed. You can creaate a new file under providers that implements a simple function signature
+- If the latest message returns no results, we fall back to combining the last two messages for a broader search
 
-1. The complete codebase in a public GitHub repository
-2. **Clear, accurate instructions** for running the application locally
-3. A brief writeup explaining:
-   - Your approach and technologies used
-   - Any challenges you faced
-   - **What parts, if any, were AI-assisted** - being transparent about this helps us better understand your thought process and decision-making
+AI USAGE:
+I belive in AI usage for boilerplate aspects.
+The following where created with AI:
 
-## Notes
-
-- Focus on demonstrating your understanding of Next.js patterns, TypeScript, and clean code organization
-- Don't spend too much time on UI aesthetics - functionality is the priority
-- **We'll be evaluating how efficiently you process and filter data before sending to the LLM** - this is a core requirement
+- The list of 'stop words'
+- The error message handling in Anthropics API
+- Create the typescript types in types.ts and some funtion return object interfaces
+- The jurdisction token mapping list ( sanbernardino: ["san", "bernardino"], etc)
+- Some tailwinds styling
