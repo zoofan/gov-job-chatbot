@@ -60,6 +60,7 @@ The following where created with AI:
 - Create the typescript types in types.ts and some funtion return object interfaces
 - The jurdisction token mapping list ( sanbernardino: ["san", "bernardino"], etc)
 - Some tailwinds styling
+- Tests (99 of them!)
 
 NOTES ON SCALE:
 
