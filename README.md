@@ -60,3 +60,8 @@ The following where created with AI:
 - Create the typescript types in types.ts and some funtion return object interfaces
 - The jurdisction token mapping list ( sanbernardino: ["san", "bernardino"], etc)
 - Some tailwinds styling
+
+NOTES ON SCALE:
+
+- The inverted index is built once on startup and lives in memory. Lookups are fast (hash map!). This scales fine to 10x-100x the current data.
+- If we were to scale for much larger data sets (1000x+), loading all the data in memory would be an issue. I'd move the data into a relational db and build the index there.
