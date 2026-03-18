@@ -26,6 +26,12 @@ npm run dev
 
 4. Open [http://localhost:3000/chat](http://localhost:3000/chat) in your browser to use the app.
 
+5. TO RUN TESTS:
+
+```bash
+npm run test
+```
+
 ## Implementation Notes
 
 The implementation is essentially a RAG (Retrieval-Augmented Generation) pattern.
